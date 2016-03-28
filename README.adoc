@@ -2,8 +2,6 @@
 
 This library allows an Arduino board to measure motion and related times via IR sensors.
 
-For more information about this library please visit us at
-https://github.com/mstoyanov1/IR_Accelerating_Motion
 
 == License ==
 

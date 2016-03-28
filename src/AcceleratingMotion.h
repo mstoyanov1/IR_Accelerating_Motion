@@ -10,7 +10,7 @@
   Possible improvements:
    - remove display dependency
    - improved input validation
-   - ability to export measured deltas for further processing
+   - ability to export all measured deltas for further processing
    - add time formatting support
    - time counter overflow detection
    - performance/space optimizations
