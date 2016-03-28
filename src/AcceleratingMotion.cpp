@@ -18,15 +18,13 @@ AcceleratingMotion::AcceleratingMotion(const int* pinArray, int sz) {
         exit(1);
     }
 
-    // init the deltas with zeros
-    memset(deltas, 0, (sz-1) * sizeof(*pinArray));
-    
     // init internal pins array and reference time, setup control variable
     for (int i = 0; i < size; i++) {
       pins[i] = *pinArray++;
     }
-    next = pins[0];
-    time_in = 0;
+
+    // (re-)set/init control variable and time variables
+    reset();
 }
 
 void AcceleratingMotion::readPins() {
@@ -43,16 +41,16 @@ void AcceleratingMotion::readPins() {
 	    reset();
 	    break;
 	  }
-          deltas[j] =  millis() - time_in;          // measure current delta from reference time
+          deltas[j] =  current_time - time_in;      // measure current delta from reference time
           displayReading("t", i, deltas[j]);        // display the current reading on display & serial monitor
-          if (pin == pins[size-1]) {                   // is this the last pin?
+          if (pin == pins[size-1]) {                // is this the last pin?
             msgEnd();                               // inform the user that the measurement has ended
             reset();                                // once last pin becomes active it is time to reset the system to initial state
             break;                                  // no need to set next, since part of reset() and PINS[i+1] would be out of the array bounds
           }
        }
-       next = pins[i+1];                           // set next expected active pin
-       break;                                      // and break, since the active pin has been detected - no need to check the rest (if any) within the current loop iteration - those are not allowed to be active
+       next = pins[i+1];                            // set next expected active pin
+       break;                                       // and break, since the active pin has been detected - no need to check the rest (if any) within the current loop iteration - those are not allowed to be active
       }
     }
 }
@@ -77,7 +75,7 @@ void AcceleratingMotion::setupDisplay() {
     SeeedOled.setNormalDisplay(); // Set display to normal mode (i.e non-inverse mode)
     SeeedOled.setPageMode();      // Set addressing mode to Page Mode
 
-    SeeedOled.setTextXY(4, 0);
+    SeeedOled.setTextXY(size,0);
     SeeedOled.putString("Roll the ball!");
 }
 
@@ -88,20 +86,26 @@ void AcceleratingMotion::msgStart() {
 }
 
 void AcceleratingMotion::msgEnd() {
-    SeeedOled.setTextXY(4,0); SeeedOled.putString("End...");
+    SeeedOled.setTextXY(size,0); SeeedOled.putString("End...");
     SeeedOled.setTextXY(0,0); SeeedOled.putString("Roll the ball!");
 }
 
 void AcceleratingMotion::displayReading(const char * paramName, int index, unsigned long value) {
-    Serial.print(paramName); Serial.print(index); Serial.print(": "); Serial.print(value); Serial.println(" ms"); // @todo remove me for production environments
+    char buf[30];
+    snprintf(buf, 30, "%s%d: %lu ms", paramName, index, value);
+
+    Serial.println(buf);
+    
     SeeedOled.setTextXY(index, 0);
-    SeeedOled.putString(paramName); SeeedOled.putNumber(index); SeeedOled.putString(": "); SeeedOled.putNumber(value); SeeedOled.putString(" ms");
+    SeeedOled.putString(buf);
 }
 
 void AcceleratingMotion::displayPinStats() {
+    char buf[24];
     for (int i = 0, n = size; i < n; i++) {
       SeeedOled.setTextXY(i, 0);
-      SeeedOled.putString("PIN "); SeeedOled.putNumber(pins[i]); SeeedOled.putString(": "); SeeedOled.putString(LOW == digitalRead(pins[i]) ? "LOW" : "HIGH");
+      snprintf(buf, 24, "PIN %d: %s", pins[i], LOW == digitalRead(pins[i]) ? "LOW" : "HIGH");
+      SeeedOled.putString(buf);
     }
 }
 
@@ -110,15 +114,15 @@ void AcceleratingMotion::reset() {
     next = pins[0];
     // zero time variables
     time_in = 0;
-    for (int i = 0, n = size - 1; i < n; i++) {
-      deltas[i] = 0;
-    }
+    memset(deltas, 0, (size-1) * sizeof(*deltas));
 }
 
 // @todo remove me for production enviroments
 void AcceleratingMotion::debug() {
+    char buf[24];
     for (int i = 0; i < size; i++) {
-      Serial.print("PIN "); Serial.print(pins[i]); Serial.print(": "); Serial.println(LOW == digitalRead(pins[i]) ? "LOW" : "HIGH");
+      snprintf(buf, 24, "PIN %d: %s", pins[i], LOW == digitalRead(pins[i]) ? "LOW" : "HIGH");
+      Serial.println(buf);
     }
 }
 
