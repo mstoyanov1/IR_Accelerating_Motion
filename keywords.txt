@@ -1,0 +1,21 @@
+#######################################
+# IR Sensor Motion detection
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+AcceleratingMotion KEYWORD1	IR
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin            KEYWORD2
+readPins	 KEYWORD2
+displayPinStats	 KEYWORD2
+read	         KEYWORD2
+debug	         KEYWORD2
+#######################################
+# Constants (LITERAL1)
+#######################################
