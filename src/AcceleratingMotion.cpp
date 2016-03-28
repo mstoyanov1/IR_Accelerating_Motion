@@ -1,7 +1,7 @@
 #include "AcceleratingMotion.h"
 
-AcceleratingMotion::AcceleratingMotion(int* pinArray, int sz) {
-    if (size <= 2) {
+AcceleratingMotion::AcceleratingMotion(const int* pinArray, int sz) {
+    if (sz < 2) {
 	Serial.println("[AcceleratingMotion]: At least 2 pins expected for reading. Make sure your setup is connected properly. Exiting...");
         exit(1);
     } else {
@@ -18,7 +18,7 @@ AcceleratingMotion::AcceleratingMotion(int* pinArray, int sz) {
         exit(1);
     }
 
-    // init the deltas with zeros, setup
+    // init the deltas with zeros
     memset(deltas, 0, (sz-1) * sizeof(*pinArray));
     
     // init internal pins array and reference time, setup control variable
@@ -30,16 +30,22 @@ AcceleratingMotion::AcceleratingMotion(int* pinArray, int sz) {
 }
 
 void AcceleratingMotion::readPins() {
-    for (int i = 0, j = -1, n = size; i < n; i++, j++) {
+    for (int i = 0, j = -1; i < size; i++, j++) {
       int pin = pins[i];                            // currently tested pin
       if (LOW == digitalRead(pin) && next == pin) { // react only if IR sensor connection broken (object detected) and this is the currently expected pin
         if (pin == pins[0]) {                       // is this the first pin?
           time_in = millis();                       // setup reference time
           msgStart();                               // inform the user a new measurement has started
         } else {
+	  unsigned long current_time = millis();
+	  if (current_time < time_in) {             // time overflow? -> reset the experiment
+	    Serial.println("Overflow...Resetting...");
+	    reset();
+	    break;
+	  }
           deltas[j] =  millis() - time_in;          // measure current delta from reference time
           displayReading("t", i, deltas[j]);        // display the current reading on display & serial monitor
-          if (pin == pins[n-1]) {                   // is this the last pin?
+          if (pin == pins[size-1]) {                   // is this the last pin?
             msgEnd();                               // inform the user that the measurement has ended
             reset();                                // once last pin becomes active it is time to reset the system to initial state
             break;                                  // no need to set next, since part of reset() and PINS[i+1] would be out of the array bounds
@@ -57,6 +63,11 @@ void AcceleratingMotion::begin() {
     pinMode(pins[i], INPUT);
   }
   setupDisplay();
+}
+
+unsigned long AcceleratingMotion::getDelta(int index) {
+  if (index < 0 || index > size) return 0; // silent skip out of bounds issues with time readings
+  return deltas[index];
 }
 
 void AcceleratingMotion::setupDisplay() {

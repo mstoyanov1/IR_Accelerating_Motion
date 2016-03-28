@@ -38,9 +38,10 @@
 class AcceleratingMotion
 {
   public:
-    AcceleratingMotion(int* pinArray, int sz);
+    AcceleratingMotion(const int* pinArray, int sz);
     void begin();
     void readPins();
+    unsigned long getDelta(int index);
     void displayPinStats();
     void debug();
   private:
