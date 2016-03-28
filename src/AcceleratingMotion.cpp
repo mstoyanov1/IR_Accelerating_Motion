@@ -18,7 +18,7 @@ AcceleratingMotion::AcceleratingMotion(const int* pinArray, int sz) {
         exit(1);
     }
 
-    // init internal pins array and reference time, setup control variable
+    // map given pins to internal array
     for (int i = 0; i < size; i++) {
       pins[i] = *pinArray++;
     }
@@ -102,7 +102,7 @@ void AcceleratingMotion::displayReading(const char * paramName, int index, unsig
 
 void AcceleratingMotion::displayPinStats() {
     char buf[24];
-    for (int i = 0, n = size; i < n; i++) {
+    for (int i = 0; i < size; i++) {
       SeeedOled.setTextXY(i, 0);
       snprintf(buf, 24, "PIN %d: %s", pins[i], LOW == digitalRead(pins[i]) ? "LOW" : "HIGH");
       SeeedOled.putString(buf);
